@@ -1,4 +1,4 @@
-# Alpha Investing 📈 f
+# Alpha Investing 📈
 
 **Alpha Investing** is an intelligent stock and portfolio recommendation platform tailored for Indian retail investors (NSE/BSE). It allows users to define their investment amount (₹), time horizon, and target return expectations, evaluating risk feasibility ("Reality Check") and generating a safe, diversified asset allocation across Nifty 50 ETFs, blue-chip stocks, and gold hedges.
 
