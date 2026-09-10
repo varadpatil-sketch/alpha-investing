@@ -55,6 +55,15 @@ export interface SavedPortfolio {
   createdAt: string;
 }
 
+export interface QuantScoreBreakdown {
+  totalScore: number;
+  valueScore: number;
+  growthScore: number;
+  momentumScore: number;
+  qualityScore: number;
+  rating: 'Strong Buy' | 'Buy' | 'Hold' | 'Underperform';
+}
+
 export interface ScreenerStockItem {
   symbol: string;
   fullSymbol: string;
@@ -74,5 +83,25 @@ export interface ScreenerStockItem {
   fiftyTwoWeekHigh: number;
   fiftyTwoWeekLow: number;
   marketCap: number;
+  pe?: number;
+  priceToBook?: number;
+  dividendYield?: number;
+  debtToEquity?: number;
+  returnOnEquity?: number;
+  revenueGrowth?: number;
+  fiftyDayAverage?: number;
+  twoHundredDayAverage?: number;
+  quantScore?: QuantScoreBreakdown;
+  matchScorePct?: number;
   lastRefreshedAt?: string;
+}
+
+export interface QuantFilterParams {
+  sector: string;
+  marketCap: 'all' | 'large' | 'mid' | 'small';
+  maxPe: number;
+  minDivYield: number;
+  rsiSignal: 'all' | 'oversold' | 'bullish' | 'overbought';
+  maCrossover: 'all' | 'above_50_ema' | 'above_200_ema' | 'golden_cross';
+  minQuantScore: number;
 }

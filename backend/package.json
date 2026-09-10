@@ -2,11 +2,11 @@
   "name": "alpha-investing-backend",
   "version": "1.0.0",
   "description": "Alpha Investing - Indian Stock Market Recommendation Engine Backend",
-  "main": "dist/server.js",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -14,7 +14,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.1"
+    "mongoose": "^8.3.1",
+    "yahoo-finance2": "^4.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

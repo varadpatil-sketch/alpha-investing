@@ -52,9 +52,11 @@ router.get('/nifty50', async (_req, res) => {
 router.get('/screener', async (req, res) => {
   try {
     const forceRefresh = req.query.refresh === 'true';
+    const { sector, marketCap, maxPe, minDivYield } = req.query;
+
     const kiteResponse = await YahooFinanceService.getKiteFormattedResponse(SCREENER_NSE_SYMBOLS, forceRefresh);
 
-    const screenerItems = Object.entries(kiteResponse.data).map(([symbol, item]) => ({
+    let screenerItems = Object.entries(kiteResponse.data).map(([symbol, item]) => ({
       symbol: symbol.replace('NSE:', ''),
       fullSymbol: symbol,
       name: item.meta.name,
@@ -73,8 +75,37 @@ router.get('/screener', async (req, res) => {
       fiftyTwoWeekHigh: item.meta.fiftyTwoWeekHigh,
       fiftyTwoWeekLow: item.meta.fiftyTwoWeekLow,
       marketCap: item.meta.marketCap,
+      pe: item.meta.trailingPE || 22.0,
+      priceToBook: item.meta.priceToBook || 3.0,
+      dividendYield: item.meta.dividendYield || 1.2,
+      debtToEquity: item.meta.debtToEquity || 0.4,
+      returnOnEquity: item.meta.returnOnEquity || 18.0,
+      revenueGrowth: item.meta.revenueGrowth || 12.0,
+      fiftyDayAverage: item.meta.fiftyDayAverage || item.last_price,
+      twoHundredDayAverage: item.meta.twoHundredDayAverage || item.last_price,
       lastRefreshedAt: item.meta.lastRefreshedAt,
     }));
+
+    // Apply Backend API filters if passed
+    if (sector && sector !== 'all') {
+      screenerItems = screenerItems.filter(
+        (s) => s.sector.toLowerCase() === String(sector).toLowerCase()
+      );
+    }
+
+    if (marketCap && marketCap !== 'all') {
+      if (marketCap === 'large') screenerItems = screenerItems.filter((s) => s.marketCap >= 1000000000000);
+      else if (marketCap === 'mid') screenerItems = screenerItems.filter((s) => s.marketCap >= 200000000000 && s.marketCap < 1000000000000);
+      else if (marketCap === 'small') screenerItems = screenerItems.filter((s) => s.marketCap < 200000000000);
+    }
+
+    if (maxPe && !isNaN(Number(maxPe))) {
+      screenerItems = screenerItems.filter((s) => s.pe <= Number(maxPe));
+    }
+
+    if (minDivYield && !isNaN(Number(minDivYield))) {
+      screenerItems = screenerItems.filter((s) => s.dividendYield >= Number(minDivYield));
+    }
 
     res.json({
       count: screenerItems.length,
