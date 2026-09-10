@@ -1,0 +1,78 @@
+export interface AllocationItem {
+  symbol: string;
+  name: string;
+  exchange: string;
+  instrumentToken: number;
+  weightPct: number;
+  allocatedAmount: number;
+  sector: string;
+  assetClass: string;
+  riskRating: string;
+  expectedCagr: number;
+  description: string;
+  lastPrice: number;
+}
+
+export interface RecommendationResult {
+  investmentAmount: number;
+  timeHorizonYears: number;
+  expectedReturnPct: number;
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  realityScore: 'realistic' | 'moderate_risk' | 'high_risk_warning';
+  realityTitle: string;
+  realityMessage: string;
+  suggestedReturnPct: number;
+  allocations: AllocationItem[];
+  projectedValue1Yr: number;
+  projectedValue3Yr: number;
+  projectedValue5Yr: number;
+  projectedValue10Yr: number;
+  backtestPerformance: {
+    year: string;
+    portfolioReturn: number;
+    nifty50Return: number;
+  }[];
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  riskTolerance?: string;
+}
+
+export interface SavedPortfolio {
+  _id: string;
+  title: string;
+  investmentAmount: number;
+  timeHorizonYears: number;
+  expectedReturnPct: number;
+  riskTolerance: string;
+  realityScore: string;
+  realityMessage: string;
+  allocations: AllocationItem[];
+  projectedValue5Yr: number;
+  createdAt: string;
+}
+
+export interface ScreenerStockItem {
+  symbol: string;
+  fullSymbol: string;
+  name: string;
+  exchange: string;
+  price: number;
+  netChange: number;
+  pctChange: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  sector: string;
+  assetClass: string;
+  riskRating: string;
+  fiftyTwoWeekHigh: number;
+  fiftyTwoWeekLow: number;
+  marketCap: number;
+  lastRefreshedAt?: string;
+}
