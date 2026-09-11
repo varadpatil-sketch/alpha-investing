@@ -6,6 +6,9 @@ import authRoutes from './routes/authRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js';
 import marketRoutes from './routes/marketRoutes.js';
+import holdingRoutes from './routes/holdingRoutes.js';
+import basketRoutes from './routes/basketRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 dotenv.config();
 
@@ -21,6 +24,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/holdings', holdingRoutes);
+app.use('/api/baskets', basketRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

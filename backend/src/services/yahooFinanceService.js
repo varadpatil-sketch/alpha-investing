@@ -7,24 +7,73 @@ const quoteCache = new Map();
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minute TTL
 
 export const SCREENER_NSE_SYMBOLS = [
+  // ETFs & Index Instruments (4)
   'NIFTYBEES.NS',
   'JUNIORBEES.NS',
-  'RELIANCE.NS',
-  'HDFCBANK.NS',
-  'ICICIBANK.NS',
-  'TCS.NS',
-  'INFY.NS',
-  'ITC.NS',
-  'LT.NS',
-  'SBIN.NS',
-  'BHARTIARTL.NS',
-  'AXISBANK.NS',
-  'KOTAKBANK.NS',
-  'TATAMOTORS.NS',
-  'MARUTI.NS',
-  'HINDUNILVR.NS',
   'GOLDBEES.NS',
   'LIQUIDBEES.NS',
+
+  // Banking & Financial Services (10)
+  'HDFCBANK.NS',
+  'ICICIBANK.NS',
+  'SBIN.NS',
+  'AXISBANK.NS',
+  'KOTAKBANK.NS',
+  'BAJFINANCE.NS',
+  'BAJAJFINSV.NS',
+  'INDUSINDBK.NS',
+  'BANKBARODA.NS',
+  'PFC.NS',
+
+  // IT & Technology (7)
+  'TCS.NS',
+  'INFY.NS',
+  'HCLTECH.NS',
+  'WIPRO.NS',
+  'LTIM.NS',
+  'TECHM.NS',
+  'PERSISTENT.NS',
+
+  // Oil, Gas, Energy & Utilities (6)
+  'RELIANCE.NS',
+  'NTPC.NS',
+  'POWERGRID.NS',
+  'ONGC.NS',
+  'BPCL.NS',
+  'ADANIENT.NS',
+
+  // Automobiles & Auto Components (5)
+  'TATAMOTORS.NS',
+  'MARUTI.NS',
+  'M&M.NS',
+  'BAJAJ-AUTO.NS',
+  'HEROMOTOCO.NS',
+
+  // Consumer Goods & Retail (5)
+  'ITC.NS',
+  'HINDUNILVR.NS',
+  'TITAN.NS',
+  'ASIANPAINT.NS',
+  'TRENT.NS',
+
+  // Pharmaceuticals & Healthcare (5)
+  'SUNPHARMA.NS',
+  'CIPLA.NS',
+  'DRREDDY.NS',
+  'DIVISLAB.NS',
+  'APOLLOHOSP.NS',
+
+  // Metals & Mining (4)
+  'TATASTEEL.NS',
+  'HINDALCO.NS',
+  'JSWSTEEL.NS',
+  'COALINDIA.NS',
+
+  // Infrastructure & Cement (4)
+  'LT.NS',
+  'ULTRACEMCO.NS',
+  'GRASIM.NS',
+  'BHARTIARTL.NS',
 ];
 
 export const DEFAULT_NSE_SYMBOLS = SCREENER_NSE_SYMBOLS;
@@ -79,6 +128,7 @@ export class YahooFinanceService {
     let sector = quote.sector || 'Equities';
 
     const symUpper = yahooSymbol.toUpperCase();
+
     if (symUpper.includes('BEES') || symUpper.includes('ETF') || quote.quoteType === 'ETF') {
       if (symUpper.includes('GOLD')) {
         assetClass = 'Debt & Gold ETF';
@@ -90,8 +140,20 @@ export class YahooFinanceService {
         assetClass = 'Index ETF';
         sector = 'Index / Diversified';
       }
-    } else if (quote.marketCap && quote.marketCap < 800000000000) {
-      assetClass = 'Mid Cap Stock';
+    } else {
+      if (quote.marketCap && quote.marketCap < 800000000000) {
+        assetClass = 'Mid Cap Stock';
+      }
+      if (!quote.sector || quote.sector === 'Equities') {
+        if (symUpper.includes('BANK') || symUpper.includes('BAJ') || symUpper.includes('PFC')) sector = 'Financial Services';
+        else if (symUpper.includes('TCS') || symUpper.includes('INFY') || symUpper.includes('WIPRO') || symUpper.includes('TECHM') || symUpper.includes('LTIM') || symUpper.includes('HCLTECH') || symUpper.includes('PERSISTENT')) sector = 'Technology';
+        else if (symUpper.includes('SUNPHARMA') || symUpper.includes('CIPLA') || symUpper.includes('DRREDDY') || symUpper.includes('DIVISLAB') || symUpper.includes('APOLLO')) sector = 'Healthcare & Pharma';
+        else if (symUpper.includes('TATAMOTORS') || symUpper.includes('MARUTI') || symUpper.includes('M&M') || symUpper.includes('HERO') || symUpper.includes('BAJAJ-AUTO')) sector = 'Automobiles';
+        else if (symUpper.includes('ITC') || symUpper.includes('HINDUNILVR') || symUpper.includes('TITAN') || symUpper.includes('ASIAN') || symUpper.includes('TRENT')) sector = 'Consumer Goods';
+        else if (symUpper.includes('STEEL') || symUpper.includes('HINDALCO') || symUpper.includes('COAL') || symUpper.includes('JSW')) sector = 'Metals & Mining';
+        else if (symUpper.includes('RELIANCE') || symUpper.includes('NTPC') || symUpper.includes('POWER') || symUpper.includes('ONGC') || symUpper.includes('BPCL') || symUpper.includes('ADANI')) sector = 'Energy & Power';
+        else if (symUpper.includes('LT') || symUpper.includes('ULTRACEM') || symUpper.includes('GRASIM') || symUpper.includes('BHARTI')) sector = 'Infrastructure';
+      }
     }
 
     const cagr5YrEst = quote.fiftyTwoWeekHighChangePercent

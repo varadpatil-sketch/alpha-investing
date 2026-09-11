@@ -1,4 +1,5 @@
 import { YahooFinanceService } from './yahooFinanceService.js';
+import { generatePortfolioInsights } from './geminiService.js';
 
 export class RecommendationEngine {
   static async generatePortfolio(input) {
@@ -112,7 +113,7 @@ export class RecommendationEngine {
       { year: '2024', portfolioReturn: 18.9, nifty50Return: 16.5 },
     ];
 
-    return {
+    const resultPayload = {
       investmentAmount,
       timeHorizonYears,
       expectedReturnPct,
@@ -128,5 +129,18 @@ export class RecommendationEngine {
       projectedValue10Yr: calcCompounded(10),
       backtestPerformance,
     };
+
+    // Attach Gemini AI Insights asynchronously or safely
+    try {
+      const aiResponse = await generatePortfolioInsights(resultPayload);
+      if (aiResponse.success) {
+        resultPayload.aiInsights = aiResponse.insightText;
+        resultPayload.aiModel = aiResponse.modelUsed;
+      }
+    } catch (aiErr) {
+      console.warn('Could not generate Gemini AI insights for portfolio:', aiErr.message);
+    }
+
+    return resultPayload;
   }
 }
