@@ -13,12 +13,15 @@ import {
   TrendingDown,
   Layers,
   Clock,
+  Newspaper,
 } from 'lucide-react';
 import { fetchHistoricalCandles, fetchScreenerStocks, CandleData } from '../../services/api';
 import { ScreenerStockItem } from '../../types';
 import { LightweightChartContainer, ChartType } from './LightweightChartContainer';
 import { IndicatorSettingsModal } from './IndicatorSettingsModal';
 import { DEFAULT_INDICATOR_SETTINGS, IndicatorSettings } from '../../services/indicators/indicatorEngine';
+import { TickerNewsDrawer } from '../common/TickerNewsDrawer';
+
 
 const TIMEFRAMES = [
   { label: '1m', value: '1m' },
@@ -60,6 +63,7 @@ export const TradingTerminal: React.FC = () => {
 
   const [isIndicatorModalOpen, setIsIndicatorModalOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isNewsDrawerOpen, setIsNewsDrawerOpen] = useState<boolean>(false);
 
   // Save indicator settings
   const handleUpdateIndicators = (updated: IndicatorSettings) => {
@@ -205,6 +209,14 @@ export const TradingTerminal: React.FC = () => {
         {/* Right: Technical Indicator Engine & Fullscreen Toggle */}
         <div className="flex items-center space-x-2">
           <button
+            onClick={() => setIsNewsDrawerOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-extrabold text-xs transition-all"
+          >
+            <Newspaper className="h-3.5 w-3.5 text-indigo-400" />
+            <span>Stock News</span>
+          </button>
+
+          <button
             onClick={() => setIsIndicatorModalOpen(true)}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all"
           >
@@ -343,6 +355,13 @@ export const TradingTerminal: React.FC = () => {
         onClose={() => setIsIndicatorModalOpen(false)}
         indicators={indicators}
         onChangeIndicators={handleUpdateIndicators}
+      />
+
+      {/* Ticker-Specific News Drawer */}
+      <TickerNewsDrawer
+        symbol={symbol.replace('.NS', '')}
+        isOpen={isNewsDrawerOpen}
+        onClose={() => setIsNewsDrawerOpen(false)}
       />
     </div>
   );

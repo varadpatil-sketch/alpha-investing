@@ -12,6 +12,7 @@ import { StockScreener } from './components/StockScreener';
 import { TradingTerminal } from './components/terminal/TradingTerminal';
 import { PortfolioManager } from './components/portfolio/PortfolioManager';
 import { BasketManager } from './components/baskets/BasketManager';
+import { NewsFeed } from './components/NewsFeed';
 import { KitePayloadModal } from './components/KitePayloadModal';
 import { AuthModal } from './components/AuthModal';
 import { SavedPortfoliosModal } from './components/SavedPortfoliosModal';
@@ -20,14 +21,15 @@ import { TradeModal } from './components/portfolio/TradeModal';
 import { PaperTradingProvider } from './context/PaperTradingContext';
 import { generateRecommendation, savePortfolio } from './services/api';
 import { AllocationItem, RecommendationResult, UserProfile } from './types';
-import { BookmarkCheck, Shield, Sparkles, TrendingUp, HelpCircle, RefreshCw, BarChart2, CandlestickChart, Briefcase, Layers } from 'lucide-react';
+import { BookmarkCheck, Shield, Sparkles, TrendingUp, HelpCircle, RefreshCw, BarChart2, CandlestickChart, Briefcase, Layers, Newspaper } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets'>('recommendations');
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets' | 'news'>('recommendations');
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
+
 
   // Modals state
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
@@ -244,10 +246,14 @@ export function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {activeTab === 'baskets' ? (
+        {activeTab === 'news' ? (
+          /* TAB 6: INDIAN FINANCIAL NEWS & AI SENTIMENT FEED */
+          <NewsFeed />
+        ) : activeTab === 'baskets' ? (
           /* TAB 5: SMALLCASE CUSTOM STOCK BASKETS */
           <BasketManager />
         ) : activeTab === 'holdings' ? (
+
           /* TAB 4: LIVE EQUITY PORTFOLIO MANAGER */
           <PortfolioManager />
         ) : activeTab === 'terminal' ? (
@@ -432,8 +438,11 @@ export function App() {
       </footer>
 
       {/* Modals */}
+      <TradeModal />
+
       <KitePayloadModal
         isOpen={isKiteOpen}
+
         onClose={() => setIsKiteOpen(false)}
         selectedStock={inspectStock}
         portfolioAllocations={recommendation?.allocations}

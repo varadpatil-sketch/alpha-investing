@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, ShieldCheck, User, Bookmark, LogOut, Zap, RefreshCw, BarChart2, Sparkles, CandlestickChart, Briefcase, Layers, Wallet } from 'lucide-react';
+import { TrendingUp, ShieldCheck, User, Bookmark, LogOut, Zap, RefreshCw, BarChart2, Sparkles, CandlestickChart, Briefcase, Layers, Wallet, Newspaper } from 'lucide-react';
 import { UserProfile } from '../types';
 import { fetchMarketIndices, MarketIndexItem } from '../services/api';
 import { usePaperTrading } from '../context/PaperTradingContext';
 
 interface NavbarProps {
-  activeTab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets';
-  onChangeTab: (tab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets') => void;
+  activeTab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets' | 'news';
+  onChangeTab: (tab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets' | 'news') => void;
   user: UserProfile | null;
   onOpenAuth: () => void;
   onLogout: () => void;
@@ -116,8 +116,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="sm:hidden">Baskets</span>
           </button>
 
+          <button
+            onClick={() => onChangeTab('news')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'news'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Newspaper className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">News</span>
+            <span className="sm:hidden">News</span>
+          </button>
+
           {/* Shifted Gold Alpha Analyst Button to Center Navigation */}
           <div className="h-4 w-[1px] bg-slate-800 mx-0.5 hidden md:block" />
+
           <button
             onClick={onOpenAlphaAnalyst}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 font-extrabold text-xs border border-amber-500/40 transition-all shadow-md shadow-amber-500/10"

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SavedPortfolio, UserProfile, ScreenerStockItem } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -322,3 +322,59 @@ export const createCustomBasket = async (data: {
 export const deleteCustomBasket = async (id: string): Promise<void> => {
   await client.delete(`/baskets/${id}`);
 };
+
+export interface NewsItem {
+  uuid: string;
+  title: string;
+  publisher: string;
+  link: string;
+  providerPublishTime: string;
+  snippet: string;
+  category: string;
+  relatedTickers?: string[];
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  sentimentScore: number;
+  impactSummary: string;
+  isAiAnalyzed: boolean;
+}
+
+export interface SentimentSummary {
+  overallLabel: string;
+  bullishPct: number;
+  bullishCount: number;
+  bearishCount: number;
+  neutralCount: number;
+  total: number;
+}
+
+export interface MarketNewsResponse {
+  success: boolean;
+  count: number;
+  refreshedAt: string;
+  sentimentSummary: SentimentSummary;
+  news: NewsItem[];
+}
+
+export interface TickerNewsResponse {
+  success: boolean;
+  symbol: string;
+  count: number;
+  refreshedAt: string;
+  sentimentSummary: SentimentSummary;
+  news: NewsItem[];
+}
+
+export const fetchMarketNews = async (category: string = 'all', forceRefresh: boolean = false): Promise<MarketNewsResponse> => {
+  const response = await client.get('/news/market', {
+    params: { category, refresh: forceRefresh },
+  });
+  return response.data;
+};
+
+export const fetchTickerNews = async (symbol: string, forceRefresh: boolean = false): Promise<TickerNewsResponse> => {
+  const response = await client.get(`/news/ticker/${encodeURIComponent(symbol)}`, {
+    params: { refresh: forceRefresh },
+  });
+  return response.data;
+};
+

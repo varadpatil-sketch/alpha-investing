@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "sync-db": "node scripts/sync-to-atlas.js"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",

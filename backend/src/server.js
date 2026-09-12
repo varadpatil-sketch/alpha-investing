@@ -9,6 +9,7 @@ import marketRoutes from './routes/marketRoutes.js';
 import holdingRoutes from './routes/holdingRoutes.js';
 import basketRoutes from './routes/basketRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import newsRoutes from './routes/newsRoutes.js';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.use('/api/market', marketRoutes);
 app.use('/api/holdings', holdingRoutes);
 app.use('/api/baskets', basketRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/news', newsRoutes);
+
 
 // Health check
 app.get('/api/health', (_req, res) => {

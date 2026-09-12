@@ -19,12 +19,15 @@ import {
   Info,
   AlertTriangle,
   ShoppingCart,
+  Newspaper,
 } from 'lucide-react';
 import { fetchAlphaAnalystReport, AlphaAnalystReportResponse } from '../services/api';
 import { DownloadPdfButton } from './pdf/DownloadPdfButton';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { generateAudioBriefScript } from '../lib/audioBrief';
 import { usePaperTrading } from '../context/PaperTradingContext';
+import { TickerNewsDrawer } from './common/TickerNewsDrawer';
+
 
 
 interface AlphaAnalystModalProps {
@@ -46,11 +49,12 @@ export const AlphaAnalystModal: React.FC<AlphaAnalystModalProps> = ({
 }) => {
   const { openTradeModal } = usePaperTrading();
   const [symbolInput, setSymbolInput] = useState<string>(initialSymbol);
-
   const [activeSymbol, setActiveSymbol] = useState<string>(initialSymbol);
   const [loading, setLoading] = useState<boolean>(false);
   const [report, setReport] = useState<AlphaAnalystReportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isNewsDrawerOpen, setIsNewsDrawerOpen] = useState<boolean>(false);
+
 
   const {
     speak,
@@ -358,6 +362,15 @@ export const AlphaAnalystModal: React.FC<AlphaAnalystModalProps> = ({
             {report && !loading && (
               <>
                 <button
+                  onClick={() => setIsNewsDrawerOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-sm bg-slate-900 hover:bg-slate-800 text-amber-300 border-amber-500/30"
+                  title={`View Live News Stream for ${activeSymbol}`}
+                >
+                  <Newspaper className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">Stock News</span>
+                </button>
+
+                <button
                   onClick={() => openTradeModal(activeSymbol, 'BUY', report.currentPrice, report.companyName)}
                   className="px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 border shadow-md bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
                   title={`Execute Paper Trade order for ${activeSymbol}`}
@@ -365,6 +378,7 @@ export const AlphaAnalystModal: React.FC<AlphaAnalystModalProps> = ({
                   <ShoppingCart className="w-4 h-4" />
                   <span>Trade {activeSymbol}</span>
                 </button>
+
 
                 <button
                   onClick={handleToggleAudioBrief}
@@ -669,7 +683,15 @@ export const AlphaAnalystModal: React.FC<AlphaAnalystModalProps> = ({
           ) : null}
         </div>
       </div>
+
+      {/* Ticker Specific Live News & Gemini Sentiment Drawer */}
+      <TickerNewsDrawer
+        symbol={activeSymbol}
+        isOpen={isNewsDrawerOpen}
+        onClose={() => setIsNewsDrawerOpen(false)}
+      />
     </div>
   );
 };
+
 
