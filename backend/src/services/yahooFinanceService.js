@@ -7,13 +7,15 @@ const quoteCache = new Map();
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minute TTL
 
 export const SCREENER_NSE_SYMBOLS = [
-  // ETFs & Index Instruments (4)
+  // ETFs & Index Instruments (6)
   'NIFTYBEES.NS',
   'JUNIORBEES.NS',
+  'MID150BEES.NS',
+  'BANKBEES.NS',
   'GOLDBEES.NS',
   'LIQUIDBEES.NS',
 
-  // Banking & Financial Services (10)
+  // FINNIFTY & Banking / Financial Services Leaders (16)
   'HDFCBANK.NS',
   'ICICIBANK.NS',
   'SBIN.NS',
@@ -21,18 +23,39 @@ export const SCREENER_NSE_SYMBOLS = [
   'KOTAKBANK.NS',
   'BAJFINANCE.NS',
   'BAJAJFINSV.NS',
-  'INDUSINDBK.NS',
-  'BANKBARODA.NS',
+  'CHOLAFIN.NS',
+  'SHRIRAMFIN.NS',
+  'MUTHOOTFIN.NS',
+  'HDFCLIFE.NS',
+  'SBILIFE.NS',
+  'FEDERALBNK.NS',
+  'IDFCFIRSTB.NS',
   'PFC.NS',
+  'RECLTD.NS',
 
-  // IT & Technology (7)
+  // Midcap Nifty High-Growth Leaders (14)
+  'DIXON.NS',
+  'POLYCAB.NS',
+  'PERSISTENT.NS',
+  'COFORGE.NS',
+  'MPHASIS.NS',
+  'MAXHEALTH.NS',
+  'LUPIN.NS',
+  'ASTRAL.NS',
+  'SUPREMEIND.NS',
+  'CUMMINSIND.NS',
+  'BHARATFORG.NS',
+  'TUBEINVEST.NS',
+  'PIIND.NS',
+  'SUNDARMFIN.NS',
+
+  // IT & Technology (6)
   'TCS.NS',
   'INFY.NS',
   'HCLTECH.NS',
   'WIPRO.NS',
   'LTIM.NS',
   'TECHM.NS',
-  'PERSISTENT.NS',
 
   // Oil, Gas, Energy & Utilities (6)
   'RELIANCE.NS',
@@ -56,12 +79,11 @@ export const SCREENER_NSE_SYMBOLS = [
   'ASIANPAINT.NS',
   'TRENT.NS',
 
-  // Pharmaceuticals & Healthcare (5)
+  // Pharmaceuticals & Healthcare (4)
   'SUNPHARMA.NS',
   'CIPLA.NS',
   'DRREDDY.NS',
   'DIVISLAB.NS',
-  'APOLLOHOSP.NS',
 
   // Metals & Mining (4)
   'TATASTEEL.NS',
@@ -77,6 +99,21 @@ export const SCREENER_NSE_SYMBOLS = [
 ];
 
 export const DEFAULT_NSE_SYMBOLS = SCREENER_NSE_SYMBOLS;
+
+// Known Midcap and FINNIFTY explicit sets for precise tagging
+const MIDCAP_SYMBOLS_SET = new Set([
+  'MID150BEES.NS', 'DIXON.NS', 'POLYCAB.NS', 'PERSISTENT.NS', 'COFORGE.NS',
+  'MPHASIS.NS', 'MAXHEALTH.NS', 'LUPIN.NS', 'ASTRAL.NS', 'SUPREMEIND.NS',
+  'CUMMINSIND.NS', 'BHARATFORG.NS', 'TUBEINVEST.NS', 'PIIND.NS', 'SUNDARMFIN.NS',
+  'FEDERALBNK.NS', 'IDFCFIRSTB.NS', 'CHOLAFIN.NS', 'MUTHOOTFIN.NS'
+]);
+
+const FINNIFTY_SYMBOLS_SET = new Set([
+  'BANKBEES.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'SBIN.NS', 'AXISBANK.NS',
+  'KOTAKBANK.NS', 'BAJFINANCE.NS', 'BAJAJFINSV.NS', 'CHOLAFIN.NS', 'SHRIRAMFIN.NS',
+  'MUTHOOTFIN.NS', 'HDFCLIFE.NS', 'SBILIFE.NS', 'FEDERALBNK.NS', 'IDFCFIRSTB.NS',
+  'PFC.NS', 'RECLTD.NS'
+]);
 
 export class YahooFinanceService {
   /**
@@ -129,6 +166,10 @@ export class YahooFinanceService {
 
     const symUpper = yahooSymbol.toUpperCase();
 
+    if (MIDCAP_SYMBOLS_SET.has(symUpper)) {
+      assetClass = 'Mid Cap Stock';
+    }
+
     if (symUpper.includes('BEES') || symUpper.includes('ETF') || quote.quoteType === 'ETF') {
       if (symUpper.includes('GOLD')) {
         assetClass = 'Debt & Gold ETF';
@@ -136,6 +177,12 @@ export class YahooFinanceService {
       } else if (symUpper.includes('LIQUID')) {
         assetClass = 'Debt & Gold ETF';
         sector = 'Money Market';
+      } else if (symUpper.includes('MID')) {
+        assetClass = 'Midcap Index ETF';
+        sector = 'Midcap Nifty Index';
+      } else if (symUpper.includes('BANK')) {
+        assetClass = 'FINNIFTY Bank ETF';
+        sector = 'Financial Services';
       } else {
         assetClass = 'Index ETF';
         sector = 'Index / Diversified';
@@ -144,15 +191,17 @@ export class YahooFinanceService {
       if (quote.marketCap && quote.marketCap < 800000000000) {
         assetClass = 'Mid Cap Stock';
       }
-      if (!quote.sector || quote.sector === 'Equities') {
-        if (symUpper.includes('BANK') || symUpper.includes('BAJ') || symUpper.includes('PFC')) sector = 'Financial Services';
-        else if (symUpper.includes('TCS') || symUpper.includes('INFY') || symUpper.includes('WIPRO') || symUpper.includes('TECHM') || symUpper.includes('LTIM') || symUpper.includes('HCLTECH') || symUpper.includes('PERSISTENT')) sector = 'Technology';
-        else if (symUpper.includes('SUNPHARMA') || symUpper.includes('CIPLA') || symUpper.includes('DRREDDY') || symUpper.includes('DIVISLAB') || symUpper.includes('APOLLO')) sector = 'Healthcare & Pharma';
-        else if (symUpper.includes('TATAMOTORS') || symUpper.includes('MARUTI') || symUpper.includes('M&M') || symUpper.includes('HERO') || symUpper.includes('BAJAJ-AUTO')) sector = 'Automobiles';
-        else if (symUpper.includes('ITC') || symUpper.includes('HINDUNILVR') || symUpper.includes('TITAN') || symUpper.includes('ASIAN') || symUpper.includes('TRENT')) sector = 'Consumer Goods';
+      if (FINNIFTY_SYMBOLS_SET.has(symUpper)) {
+        sector = 'Financial Services';
+      } else if (!quote.sector || quote.sector === 'Equities') {
+        if (symUpper.includes('BANK') || symUpper.includes('BAJ') || symUpper.includes('PFC') || symUpper.includes('FIN')) sector = 'Financial Services';
+        else if (symUpper.includes('TCS') || symUpper.includes('INFY') || symUpper.includes('WIPRO') || symUpper.includes('TECHM') || symUpper.includes('LTIM') || symUpper.includes('HCLTECH') || symUpper.includes('PERSISTENT') || symUpper.includes('COFORGE') || symUpper.includes('MPHASIS')) sector = 'Technology';
+        else if (symUpper.includes('SUNPHARMA') || symUpper.includes('CIPLA') || symUpper.includes('DRREDDY') || symUpper.includes('DIVISLAB') || symUpper.includes('MAX') || symUpper.includes('LUPIN')) sector = 'Healthcare & Pharma';
+        else if (symUpper.includes('TATAMOTORS') || symUpper.includes('MARUTI') || symUpper.includes('M&M') || symUpper.includes('HERO') || symUpper.includes('BAJAJ-AUTO') || symUpper.includes('FORG')) sector = 'Automobiles';
+        else if (symUpper.includes('ITC') || symUpper.includes('HINDUNILVR') || symUpper.includes('TITAN') || symUpper.includes('ASIAN') || symUpper.includes('TRENT') || symUpper.includes('DIXON')) sector = 'Consumer Goods';
         else if (symUpper.includes('STEEL') || symUpper.includes('HINDALCO') || symUpper.includes('COAL') || symUpper.includes('JSW')) sector = 'Metals & Mining';
         else if (symUpper.includes('RELIANCE') || symUpper.includes('NTPC') || symUpper.includes('POWER') || symUpper.includes('ONGC') || symUpper.includes('BPCL') || symUpper.includes('ADANI')) sector = 'Energy & Power';
-        else if (symUpper.includes('LT') || symUpper.includes('ULTRACEM') || symUpper.includes('GRASIM') || symUpper.includes('BHARTI')) sector = 'Infrastructure';
+        else if (symUpper.includes('LT') || symUpper.includes('ULTRACEM') || symUpper.includes('GRASIM') || symUpper.includes('BHARTI') || symUpper.includes('ASTRAL') || symUpper.includes('POLYCAB') || symUpper.includes('SUPREME') || symUpper.includes('CUMMINS')) sector = 'Infrastructure';
       }
     }
 

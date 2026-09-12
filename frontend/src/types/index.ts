@@ -27,6 +27,8 @@ export interface RecommendationResult {
   projectedValue3Yr: number;
   projectedValue5Yr: number;
   projectedValue10Yr: number;
+  aiInsights?: string;
+  aiModel?: string;
   backtestPerformance: {
     year: string;
     portfolioReturn: number;

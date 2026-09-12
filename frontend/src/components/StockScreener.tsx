@@ -14,24 +14,30 @@ import {
   X,
   Target,
   Sparkles,
+  ShoppingCart,
 } from 'lucide-react';
 import { fetchScreenerStocks } from '../services/api';
 import { ScreenerStockItem, QuantFilterParams } from '../types';
 import { QuantScoringEngine } from '../services/quant/scoring';
 import { UserMatcherEngine } from '../services/quant/userMatcher';
+import { TableSkeleton } from './common/SkeletonLoaders';
+import { usePaperTrading } from '../context/PaperTradingContext';
 
 interface StockScreenerProps {
   onInspectKite: (symbol: string) => void;
+
 }
 
 export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) => {
+  const { openTradeModal } = usePaperTrading();
   const [stocks, setStocks] = useState<ScreenerStockItem[]>([]);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshedAt, setRefreshedAt] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Quick preset tabs
-  const [activePreset, setActivePreset] = useState<'all' | 'gainers' | 'losers' | 'etf' | 'quant_top'>('all');
+  const [activePreset, setActivePreset] = useState<'all' | 'midcap' | 'finnifty' | 'gainers' | 'losers' | 'etf' | 'quant_top'>('all');
   const [sortBy, setSortBy] = useState<'quant_desc' | 'gain_desc' | 'loss_desc' | 'price_desc' | 'market_cap'>('quant_desc');
 
   // Quant Filter State
@@ -92,6 +98,8 @@ export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) =
     if (!matchesSearch) return false;
 
     // 2. Preset filters
+    if (activePreset === 'midcap' && !stock.assetClass.toLowerCase().includes('mid') && !stock.symbol.includes('MID') && stock.marketCap >= 1000000000000) return false;
+    if (activePreset === 'finnifty' && stock.sector.toLowerCase() !== 'financial services' && !stock.symbol.includes('BANK') && !stock.symbol.includes('FIN')) return false;
     if (activePreset === 'gainers' && stock.pctChange <= 0) return false;
     if (activePreset === 'losers' && stock.pctChange >= 0) return false;
     if (activePreset === 'etf' && !stock.assetClass.includes('ETF')) return false;
@@ -191,7 +199,29 @@ export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) =
                 : 'text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800'
             }`}
           >
-            All Candidates ({stocks.length})
+            All Universe ({stocks.length})
+          </button>
+
+          <button
+            onClick={() => setActivePreset('midcap')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activePreset === 'midcap'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'text-sky-400 hover:text-white bg-sky-500/10 border border-sky-500/20'
+            }`}
+          >
+            🔥 Midcap Nifty
+          </button>
+
+          <button
+            onClick={() => setActivePreset('finnifty')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activePreset === 'finnifty'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'text-purple-400 hover:text-white bg-purple-500/10 border border-purple-500/20'
+            }`}
+          >
+            🏦 FINNIFTY
           </button>
 
           <button
@@ -319,10 +349,12 @@ export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) =
                 <option value="all">All Sectors</option>
                 <option value="financial services">Banking & Finance</option>
                 <option value="technology">IT & Technology</option>
+                <option value="healthcare & pharma">Healthcare & Pharma</option>
                 <option value="consumer goods">FMCG & Consumer</option>
                 <option value="automobiles">Automobiles</option>
-                <option value="energy">Energy & Power</option>
-                <option value="metals">Metals & Mining</option>
+                <option value="energy & power">Energy & Power</option>
+                <option value="metals & mining">Metals & Mining</option>
+                <option value="infrastructure">Infrastructure</option>
                 <option value="index / diversified">Index / ETFs</option>
               </select>
             </div>
@@ -392,12 +424,7 @@ export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) =
 
       {/* Grid of Quant Stock Cards */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 space-y-3 glass-card rounded-2xl border border-slate-800">
-          <RefreshCw className="h-8 w-8 text-emerald-400 animate-spin" />
-          <span className="text-sm font-semibold text-slate-300">
-            Evaluating Multi-Factor Quant Scores from Yahoo Finance API...
-          </span>
-        </div>
+        <TableSkeleton rows={6} />
       ) : sortedStocks.length === 0 ? (
         <div className="text-center py-16 glass-card rounded-2xl border border-slate-800 space-y-2">
           <p className="text-base font-bold text-slate-300">No stocks matching selected quant filters</p>
@@ -529,17 +556,28 @@ export const StockScreener: React.FC<StockScreenerProps> = ({ onInspectKite }) =
                   </div>
                 </div>
 
-                {/* Card Action: Kite Payload Inspection */}
-                <button
-                  onClick={() => onInspectKite(stock.symbol)}
-                  className="w-full flex items-center justify-center space-x-1.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-[11px] font-bold text-sky-400 border border-sky-500/30 transition-colors"
-                >
-                  <Code2 className="h-3.5 w-3.5" />
-                  <span>Inspect Kite JSON</span>
-                </button>
+                {/* Card Action: Paper Trade & Kite Payload Inspection */}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => openTradeModal(stock.symbol, 'BUY', stock.price, stock.name)}
+                    className="flex-1 flex items-center justify-center space-x-1.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    <span>Trade</span>
+                  </button>
+
+                  <button
+                    onClick={() => onInspectKite(stock.symbol)}
+                    className="flex items-center justify-center space-x-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-[11px] font-bold text-sky-400 border border-sky-500/30 transition-colors"
+                  >
+                    <Code2 className="h-3.5 w-3.5" />
+                    <span>Kite JSON</span>
+                  </button>
+                </div>
               </div>
             );
           })}
+
         </div>
       )}
 

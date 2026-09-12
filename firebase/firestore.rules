@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidPortfolio(data) {
+      return data.keys().hasAll(['investmentAmount', 'riskTolerance', 'timeHorizonYears'])
+        && data.investmentAmount is number
+        && data.investmentAmount > 0
+        && data.riskTolerance in ['conservative', 'moderate', 'aggressive']
+        && data.timeHorizonYears is number
+        && data.timeHorizonYears >= 1;
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User Saved Portfolios
+    match /portfolios/{portfolioId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidPortfolio(request.resource.data);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // User Custom Baskets
+    match /custom_baskets/{basketId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Public Stock Screener Telemetry & Preset Baskets (Read-Only)
+    match /screener_cache/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only updated by server admin SDK
+    }
+
+    match /preset_baskets/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

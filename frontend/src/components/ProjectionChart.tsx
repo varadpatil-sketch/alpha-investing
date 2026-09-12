@@ -2,12 +2,17 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { RecommendationResult } from '../types';
 import { TrendingUp, LineChart as LineIcon } from 'lucide-react';
+import { ChartSkeleton } from './common/SkeletonLoaders';
 
 interface ProjectionChartProps {
   recommendation: RecommendationResult;
+  isLoading?: boolean;
 }
 
-export const ProjectionChart: React.FC<ProjectionChartProps> = ({ recommendation }) => {
+export const ProjectionChart: React.FC<ProjectionChartProps> = ({ recommendation, isLoading }) => {
+  if (isLoading) {
+    return <ChartSkeleton title="Calculating Compounding Projections & Risk Models..." height="h-96" />;
+  }
   const {
     investmentAmount,
     projectedValue1Yr,

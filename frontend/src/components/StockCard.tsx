@@ -1,6 +1,7 @@
 import React from 'react';
 import { AllocationItem } from '../types';
 import { ShieldCheck, Code2, ExternalLink } from 'lucide-react';
+import { usePaperTrading } from '../context/PaperTradingContext';
 
 interface StockCardProps {
   item: AllocationItem;
@@ -8,7 +9,10 @@ interface StockCardProps {
 }
 
 export const StockCard: React.FC<StockCardProps> = ({ item, onInspectKite }) => {
+  const { openTradeModal } = usePaperTrading();
+
   return (
+
     <div className="glass-card glass-card-hover rounded-xl p-4 border border-slate-800 flex flex-col justify-between relative overflow-hidden">
       {/* Top Header */}
       <div>
@@ -64,22 +68,33 @@ export const StockCard: React.FC<StockCardProps> = ({ item, onInspectKite }) => 
         </div>
       </div>
 
-      {/* Footer controls & Kite JSON payload button */}
-      <div className="mt-4 pt-2.5 border-t border-slate-800/60 flex items-center justify-between">
+      {/* Footer controls, AI Research & Kite JSON payload button */}
+      <div className="mt-4 pt-2.5 border-t border-slate-800/60 flex items-center justify-between gap-2">
         <div className="flex items-center space-x-1 text-[10px] text-slate-400">
           <ShieldCheck className="h-3 w-3 text-emerald-400" />
           <span className="font-mono">Token: #{item.instrumentToken}</span>
         </div>
 
-        <button
-          onClick={() => onInspectKite(item)}
-          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-sky-950/50 hover:bg-sky-900/60 text-sky-400 border border-sky-800/50 text-[10px] font-semibold transition-colors"
-        >
-          <Code2 className="h-3 w-3" />
-          <span>Kite JSON</span>
-          <ExternalLink className="h-2.5 w-2.5 ml-0.5 opacity-60" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => openTradeModal(item.symbol, 'BUY', item.allocatedAmount > 0 ? Math.round(item.allocatedAmount / (item.weightPct || 1)) : undefined, item.name)}
+            className="flex items-center space-x-1 px-2.5 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-[10px] font-extrabold transition-all shadow-sm"
+            title="Execute Paper Buy/Sell Order"
+          >
+            <span>Trade</span>
+          </button>
+
+          <button
+            onClick={() => onInspectKite(item)}
+            className="flex items-center space-x-1 px-2.5 py-1 rounded bg-sky-950/50 hover:bg-sky-900/60 text-sky-400 border border-sky-800/50 text-[10px] font-semibold transition-colors"
+          >
+            <Code2 className="h-3 w-3" />
+            <span>Kite JSON</span>
+            <ExternalLink className="h-2.5 w-2.5 ml-0.5 opacity-60" />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+

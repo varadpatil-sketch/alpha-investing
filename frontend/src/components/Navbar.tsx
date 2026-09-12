@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, ShieldCheck, User, Bookmark, LogOut, Zap, RefreshCw, BarChart2, Sparkles, CandlestickChart } from 'lucide-react';
+import { TrendingUp, ShieldCheck, User, Bookmark, LogOut, Zap, RefreshCw, BarChart2, Sparkles, CandlestickChart, Briefcase, Layers, Wallet } from 'lucide-react';
 import { UserProfile } from '../types';
 import { fetchMarketIndices, MarketIndexItem } from '../services/api';
+import { usePaperTrading } from '../context/PaperTradingContext';
 
 interface NavbarProps {
-  activeTab: 'recommendations' | 'screener' | 'terminal';
-  onChangeTab: (tab: 'recommendations' | 'screener' | 'terminal') => void;
+  activeTab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets';
+  onChangeTab: (tab: 'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets') => void;
   user: UserProfile | null;
   onOpenAuth: () => void;
   onLogout: () => void;
   onOpenSaved: () => void;
+  onOpenAlphaAnalyst?: () => void;
   onOpenKiteModal?: () => void;
   onQuickDemoLogin: () => void;
 }
@@ -21,24 +23,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onLogout,
   onOpenSaved,
+  onOpenAlphaAnalyst,
   onQuickDemoLogin,
 }) => {
-  const [indices, setIndices] = useState<MarketIndexItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const loadIndices = async () => {
-      const data = await fetchMarketIndices();
-      if (data && data.length > 0) {
-        setIndices(data);
-      }
-      setIsLoading(false);
-    };
-
-    loadIndices();
-    const interval = setInterval(loadIndices, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { cashBalance } = usePaperTrading();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-lg">
@@ -101,44 +89,56 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">Pro Terminal</span>
             <span className="sm:hidden">Terminal</span>
           </button>
+
+          <button
+            onClick={() => onChangeTab('holdings')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'holdings'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Briefcase className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Paper Trading</span>
+            <span className="sm:hidden">Paper</span>
+          </button>
+
+          <button
+            onClick={() => onChangeTab('baskets')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'baskets'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Stock Baskets</span>
+            <span className="sm:hidden">Baskets</span>
+          </button>
+
+          {/* Shifted Gold Alpha Analyst Button to Center Navigation */}
+          <div className="h-4 w-[1px] bg-slate-800 mx-0.5 hidden md:block" />
+          <button
+            onClick={onOpenAlphaAnalyst}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 font-extrabold text-xs border border-amber-500/40 transition-all shadow-md shadow-amber-500/10"
+            title="Goldman Sachs Style AI Research Engine"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+            <span>Alpha Analyst</span>
+          </button>
         </div>
 
-        {/* Live Market Indices Ticker & User Controls (Right) */}
-        <div className="flex items-center space-x-3 flex-shrink-0">
-          {/* Dynamic Real-Time Benchmark Indices Ticker */}
-          <div className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs text-slate-300 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
-            {indices.length > 0 ? (
-              <div className="flex items-center space-x-2.5 font-mono text-[11px]">
-                {indices.map((idx, index) => (
-                  <React.Fragment key={idx.symbol}>
-                    <div className="flex items-center space-x-1 whitespace-nowrap">
-                      <span className="font-bold text-slate-400">{idx.symbol}:</span>
-                      <span className="font-semibold text-white">
-                        {idx.price ? idx.price.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : 'N/A'}
-                      </span>
-                      <span
-                        className={`font-bold ${
-                          idx.change >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                        }`}
-                      >
-                        {idx.change >= 0 ? '+' : ''}
-                        {idx.pctChange.toFixed(1)}%
-                      </span>
-                    </div>
-                    {index < indices.length - 1 && <span className="text-slate-700">|</span>}
-                  </React.Fragment>
-                ))}
-              </div>
-            ) : isLoading ? (
-              <span className="font-medium text-slate-400 flex items-center space-x-1 text-xs whitespace-nowrap">
-                <RefreshCw className="h-3 w-3 animate-spin text-sky-400" />
-                <span>Yahoo Live...</span>
-              </span>
-            ) : (
-              <span className="font-medium text-slate-400 text-xs">Offline</span>
-            )}
-          </div>
+        {/* User Controls & Paper Wallet Pill (Right) */}
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          {/* Paper Money Wallet Badge */}
+          <button
+            onClick={() => onChangeTab('holdings')}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold transition-all shadow-sm"
+            title="View Paper Trading Portfolio Wallet"
+          >
+            <Wallet className="h-3.5 w-3.5 text-amber-400" />
+            <span>₹{cashBalance.toLocaleString('en-IN')}</span>
+          </button>
 
           <button
             onClick={onOpenSaved}
@@ -188,4 +188,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
 

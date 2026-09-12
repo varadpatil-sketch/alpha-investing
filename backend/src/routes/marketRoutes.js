@@ -6,13 +6,19 @@ const router = Router();
 // GET /api/market/indices - Live Indian Benchmark Indices (^NSEI, ^BSESN, ^NSEBANK)
 router.get('/indices', async (_req, res) => {
   try {
-    const symbols = ['^NSEI', '^BSESN', '^NSEBANK'];
+    const symbols = ['^NSEI', '^BSESN', '^NSEBANK', 'NIFTY_MIDCAP_100.NS', '^CNXFIN', 'BSE-BANK.BO'];
     const quotes = await Promise.all(symbols.map((sym) => YahooFinanceService.getQuote(sym)));
 
     const indices = quotes.map((q) => {
       let displayName = 'NIFTY 50';
-      if (q.tradingsymbol.includes('BSESN') || q.name.includes('SENSEX')) displayName = 'SENSEX';
-      if (q.tradingsymbol.includes('NSEBANK') || q.name.includes('BANK')) displayName = 'NIFTY BANK';
+      const raw = (q.tradingsymbol || '').toUpperCase();
+      const name = (q.name || '').toUpperCase();
+
+      if (raw.includes('BSESN') || name.includes('SENSEX')) displayName = 'SENSEX';
+      else if (raw.includes('NSEBANK') || (name.includes('NIFTY') && name.includes('BANK'))) displayName = 'NIFTY BANK';
+      else if (raw.includes('MIDCAP') || name.includes('MIDCAP')) displayName = 'MIDCAP 100';
+      else if (raw.includes('CNXFIN') || name.includes('FINSRV') || name.includes('FINNIFTY')) displayName = 'FINNIFTY';
+      else if (raw.includes('BSE-BANK') || name.includes('BANKEX')) displayName = 'BANKEX';
 
       return {
         symbol: displayName,
@@ -143,6 +149,26 @@ router.get('/chart/:symbol', async (req, res) => {
   }
 });
 
+// GET /api/market/quote/:symbol - Quick live stock quote telemetry for paper trading
+router.get('/quote/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const cleanSym = symbol.toUpperCase().replace('NSE:', '').replace('.NS', '');
+    const quote = await YahooFinanceService.getQuote(cleanSym, false);
+    res.json({
+      success: true,
+      symbol: quote.tradingsymbol || cleanSym,
+      name: quote.name || cleanSym,
+      price: quote.last_price || 100,
+      change: quote.net_change || 0,
+      pctChange: quote.percentage_change || 0,
+      sector: quote.sector || 'Equities',
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to fetch quote' });
+  }
+});
+
 // GET /api/market/instruments
 router.get('/instruments', async (_req, res) => {
   try {
@@ -155,3 +181,4 @@ router.get('/instruments', async (_req, res) => {
 });
 
 export default router;
+

@@ -63,7 +63,27 @@ export const fetchMarketIndices = async (): Promise<MarketIndexItem[]> => {
   }
 };
 
+export interface SingleStockQuote {
+  success: boolean;
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  pctChange: number;
+  sector: string;
+}
+
+export const fetchStockQuote = async (symbol: string): Promise<SingleStockQuote | null> => {
+  try {
+    const response = await client.get(`/market/quote/${encodeURIComponent(symbol)}`);
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+};
+
 export const fetchHistoricalCandles = async (
+
   symbol: string,
   timeframe: string = '1D'
 ): Promise<ChartApiResponse> => {
@@ -87,6 +107,67 @@ export const generateRecommendation = async (params: {
   riskTolerance: 'conservative' | 'moderate' | 'aggressive';
 }) => {
   const response = await client.post('/recommendations/generate', params);
+  return response.data;
+};
+
+export const fetchAiStatus = async (): Promise<{ status: string; isConfigured: boolean; message: string }> => {
+  try {
+    const response = await client.get('/ai/status');
+    return response.data;
+  } catch (error) {
+    return { status: 'error', isConfigured: false, message: 'AI service unavailable' };
+  }
+};
+
+export const fetchPortfolioAiInsight = async (portfolioData: any): Promise<{ success: boolean; insightText?: string; isConfigured?: boolean; error?: string }> => {
+  const response = await client.post('/ai/portfolio-insight', portfolioData);
+  return response.data;
+};
+
+export const fetchStockAiAnalysis = async (stockData: any): Promise<{ success: boolean; analysis?: string; isConfigured?: boolean; error?: string }> => {
+  const response = await client.post('/ai/stock-analysis', stockData);
+  return response.data;
+};
+
+export const sendAiChatMessage = async (message: string, context?: any): Promise<{ success: boolean; reply?: string; isConfigured?: boolean; error?: string }> => {
+  const response = await client.post('/ai/chat', { message, context });
+  return response.data;
+};
+
+export interface AlphaAnalystReportResponse {
+  success: boolean;
+  isAiGenerated: boolean;
+  symbol: string;
+  companyName: string;
+  currentPrice: number;
+  quote: any;
+  technicals: {
+    rsi: number;
+    rsiSignal: string;
+    fiftyDayAverage: number;
+    twoHundredDayAverage: number;
+    maTrend: string;
+    fiftyTwoWeekHigh: number;
+    fiftyTwoWeekLow: number;
+    distFromHighPct: number;
+    distFromLowPct: number;
+  };
+  quantMetrics: {
+    totalScore: number;
+    rating: string;
+    valueScore: number;
+    growthScore: number;
+    momentumScore: number;
+    qualityScore: number;
+  };
+  reportMarkdown: string;
+}
+
+export const fetchAlphaAnalystReport = async (
+  symbol: string,
+  userProfile?: { riskTolerance?: string; timeHorizonYears?: number; expectedReturnPct?: number }
+): Promise<AlphaAnalystReportResponse> => {
+  const response = await client.post('/ai/alpha-analyst', { symbol, userProfile });
   return response.data;
 };
 
@@ -124,4 +205,120 @@ export const signupUser = async (
 ): Promise<{ token: string; user: UserProfile }> => {
   const response = await client.post('/auth/signup', { name, email, password, riskTolerance });
   return response.data;
+};
+
+export interface HoldingPosition {
+  _id: string;
+  symbol: string;
+  name: string;
+  quantity: number;
+  averagePrice: number;
+  lastPrice: number;
+  prevClose: number;
+  investedAmount: number;
+  currentValue: number;
+  overallPnL: number;
+  overallPnLPct: number;
+  dayPnL: number;
+  dayPnLPct: number;
+  sector: string;
+  assetClass: string;
+}
+
+export interface PortfolioHoldingsResponse {
+  summary: {
+    totalInvested: number;
+    totalCurrent: number;
+    totalOverallPnL: number;
+    totalOverallPnLPct: number;
+    totalDayPnL: number;
+    totalDayPnLPct: number;
+  };
+  sectorAllocation: {
+    name: string;
+    value: number;
+    percentage: number;
+  }[];
+  holdings: HoldingPosition[];
+}
+
+export const fetchPortfolioHoldings = async (): Promise<PortfolioHoldingsResponse> => {
+  const response = await client.get('/holdings');
+  return response.data;
+};
+
+export const addHoldingPosition = async (data: {
+  symbol: string;
+  name?: string;
+  quantity: number;
+  averagePrice: number;
+  sector?: string;
+}): Promise<void> => {
+  await client.post('/holdings', data);
+};
+
+export const deleteHoldingPosition = async (id: string): Promise<void> => {
+  await client.delete(`/holdings/${id}`);
+};
+
+export interface BasketConstituent {
+  symbol: string;
+  name: string;
+  weightPct: number;
+  ltp: number;
+  pctChange: number;
+  sector: string;
+  assetClass: string;
+}
+
+export interface KiteOrderPayloadItem {
+  tradingsymbol: string;
+  exchange: string;
+  transaction_type: string;
+  order_type: string;
+  quantity: number;
+  product: string;
+  last_price: number;
+}
+
+export interface BasketItem {
+  _id: string;
+  title: string;
+  description: string;
+  icon: string;
+  riskRating: 'Low' | 'Moderate' | 'High';
+  expectedCagr: number;
+  isCustom: boolean;
+  minCapital: number;
+  dayChangePct: number;
+  constituentsCount: number;
+  constituents: BasketConstituent[];
+  kiteOrderPayload: KiteOrderPayloadItem[];
+}
+
+export interface BasketsApiResponse {
+  count: number;
+  presets: BasketItem[];
+  customBaskets: BasketItem[];
+}
+
+export const fetchBaskets = async (): Promise<BasketsApiResponse> => {
+  const response = await client.get('/baskets');
+  return response.data;
+};
+
+export const createCustomBasket = async (data: {
+  title: string;
+  description: string;
+  icon: string;
+  riskRating: string;
+  expectedCagr: number;
+  constituents: { symbol: string; name?: string; weightPct: number; sector?: string }[];
+}): Promise<{ status: string; basket: BasketItem }> => {
+  const response = await client.post('/baskets', data);
+  return response.data;
+};
+
+export const deleteCustomBasket = async (id: string): Promise<void> => {
+  await client.delete(`/baskets/${id}`);
 };

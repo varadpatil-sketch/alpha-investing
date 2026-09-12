@@ -28,43 +28,49 @@ export class RecommendationEngine {
     }
 
     // 2. Determine Asset Weights based on Risk Profile & Time Horizon
-    let indexWeight = 40;
-    let bluechipWeight = 30;
-    let growthWeight = 10;
-    let hedgeWeight = 20;
+    let indexWeight = 35;
+    let midcapWeight = 15;
+    let finniftyWeight = 20;
+    let bluechipWeight = 20;
+    let hedgeWeight = 10;
 
     if (riskTolerance === 'conservative') {
-      indexWeight = 45;
-      bluechipWeight = 25;
-      growthWeight = 5;
-      hedgeWeight = 25;
-    } else if (riskTolerance === 'moderate') {
       indexWeight = 40;
-      bluechipWeight = 35;
-      growthWeight = 15;
+      midcapWeight = 5;
+      finniftyWeight = 15;
+      bluechipWeight = 20;
+      hedgeWeight = 20;
+    } else if (riskTolerance === 'moderate') {
+      indexWeight = 30;
+      midcapWeight = 20;
+      finniftyWeight = 20;
+      bluechipWeight = 20;
       hedgeWeight = 10;
     } else if (riskTolerance === 'aggressive') {
-      indexWeight = 30;
-      bluechipWeight = 35;
-      growthWeight = 30;
+      indexWeight = 20;
+      midcapWeight = 30;
+      finniftyWeight = 25;
+      bluechipWeight = 20;
       hedgeWeight = 5;
     }
 
     if (timeHorizonYears <= 2) {
       hedgeWeight += 15;
-      growthWeight = Math.max(0, growthWeight - 15);
+      midcapWeight = Math.max(0, midcapWeight - 15);
     }
 
-    // Target active NSE symbols
+    // Target active NSE symbols across Nifty 50, Midcap Nifty, FINNIFTY, and Hedges
     const targetSymbols = [
-      { sym: 'NIFTYBEES.NS', categoryWeight: indexWeight * 0.7 },
-      { sym: 'JUNIORBEES.NS', categoryWeight: indexWeight * 0.3 },
-      { sym: 'RELIANCE.NS', categoryWeight: bluechipWeight * 0.3 },
-      { sym: 'HDFCBANK.NS', categoryWeight: bluechipWeight * 0.25 },
-      { sym: 'ICICIBANK.NS', categoryWeight: bluechipWeight * 0.25 },
-      { sym: 'TCS.NS', categoryWeight: bluechipWeight * 0.2 },
-      { sym: 'ITC.NS', categoryWeight: growthWeight * 0.4 },
-      { sym: 'LT.NS', categoryWeight: growthWeight * 0.6 },
+      { sym: 'NIFTYBEES.NS', categoryWeight: indexWeight * 0.6 },
+      { sym: 'JUNIORBEES.NS', categoryWeight: indexWeight * 0.4 },
+      { sym: 'MID150BEES.NS', categoryWeight: midcapWeight * 0.5 },
+      { sym: 'POLYCAB.NS', categoryWeight: midcapWeight * 0.25 },
+      { sym: 'PERSISTENT.NS', categoryWeight: midcapWeight * 0.25 },
+      { sym: 'BAJFINANCE.NS', categoryWeight: finniftyWeight * 0.35 },
+      { sym: 'CHOLAFIN.NS', categoryWeight: finniftyWeight * 0.35 },
+      { sym: 'HDFCBANK.NS', categoryWeight: finniftyWeight * 0.3 },
+      { sym: 'RELIANCE.NS', categoryWeight: bluechipWeight * 0.5 },
+      { sym: 'TCS.NS', categoryWeight: bluechipWeight * 0.5 },
       { sym: 'GOLDBEES.NS', categoryWeight: hedgeWeight * 0.6 },
       { sym: 'LIQUIDBEES.NS', categoryWeight: hedgeWeight * 0.4 },
     ];

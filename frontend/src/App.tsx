@@ -1,22 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
+import { MarketTickerBar } from './components/MarketTickerBar';
 import { InvestmentForm } from './components/InvestmentForm';
 import { RealityCheckBanner } from './components/RealityCheckBanner';
+import { GeminiAiInsightsCard } from './components/GeminiAiInsightsCard';
 import { AllocationChart } from './components/AllocationChart';
 import { StockCard } from './components/StockCard';
 import { ProjectionChart } from './components/ProjectionChart';
 import { BacktestTable } from './components/BacktestTable';
 import { StockScreener } from './components/StockScreener';
 import { TradingTerminal } from './components/terminal/TradingTerminal';
+import { PortfolioManager } from './components/portfolio/PortfolioManager';
+import { BasketManager } from './components/baskets/BasketManager';
 import { KitePayloadModal } from './components/KitePayloadModal';
 import { AuthModal } from './components/AuthModal';
 import { SavedPortfoliosModal } from './components/SavedPortfoliosModal';
+import { AlphaAnalystModal } from './components/AlphaAnalystModal';
+import { TradeModal } from './components/portfolio/TradeModal';
+import { PaperTradingProvider } from './context/PaperTradingContext';
 import { generateRecommendation, savePortfolio } from './services/api';
 import { AllocationItem, RecommendationResult, UserProfile } from './types';
-import { BookmarkCheck, Shield, Sparkles, TrendingUp, HelpCircle, RefreshCw, BarChart2, CandlestickChart } from 'lucide-react';
+import { BookmarkCheck, Shield, Sparkles, TrendingUp, HelpCircle, RefreshCw, BarChart2, CandlestickChart, Briefcase, Layers } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'recommendations' | 'screener' | 'terminal'>('recommendations');
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'screener' | 'terminal' | 'holdings' | 'baskets'>('recommendations');
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -26,6 +33,8 @@ export function App() {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isSavedOpen, setIsSavedOpen] = useState<boolean>(false);
   const [isKiteOpen, setIsKiteOpen] = useState<boolean>(false);
+  const [isAlphaAnalystOpen, setIsAlphaAnalystOpen] = useState<boolean>(false);
+  const [alphaAnalystSymbol, setAlphaAnalystSymbol] = useState<string>('RELIANCE');
   const [inspectStock, setInspectStock] = useState<AllocationItem | null>(null);
 
   // Save feedback state
@@ -101,7 +110,7 @@ export function App() {
         projectedValue5Yr: recommendation.projectedValue5Yr,
       });
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
       console.error('Failed to save portfolio', err);
     }
@@ -152,13 +161,17 @@ export function App() {
           setUser(null);
         }}
         onOpenSaved={() => setIsSavedOpen(true)}
+        onOpenAlphaAnalyst={() => setIsAlphaAnalystOpen(true)}
         onOpenKiteModal={handleInspectFullPortfolio}
         onQuickDemoLogin={handleQuickDemoLogin}
       />
 
+      {/* Dedicated Benchmark Indices Ticker Bar (Below Navbar, Above Main Board) */}
+      <MarketTickerBar />
+
       {/* Mobile Tab Switcher Bar */}
-      <div className="flex lg:hidden items-center justify-center p-2 bg-slate-950 border-b border-slate-800">
-        <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 w-full max-w-sm">
+      <div className="flex lg:hidden items-center justify-center p-2 bg-slate-950 border-b border-slate-800 overflow-x-auto">
+        <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 w-full max-w-md shrink-0">
           <button
             onClick={() => setActiveTab('recommendations')}
             className={`flex-1 flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
@@ -194,12 +207,50 @@ export function App() {
             <CandlestickChart className="h-3.5 w-3.5" />
             <span>Terminal</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('holdings')}
+            className={`flex-1 flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'holdings'
+                ? 'bg-emerald-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Briefcase className="h-3.5 w-3.5" />
+            <span>Holdings</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('baskets')}
+            className={`flex-1 flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'baskets'
+                ? 'bg-emerald-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>Baskets</span>
+          </button>
+
+          <button
+            onClick={() => setIsAlphaAnalystOpen(true)}
+            className="flex-1 flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/30"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+            <span>Analyst</span>
+          </button>
         </div>
       </div>
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {activeTab === 'terminal' ? (
+        {activeTab === 'baskets' ? (
+          /* TAB 5: SMALLCASE CUSTOM STOCK BASKETS */
+          <BasketManager />
+        ) : activeTab === 'holdings' ? (
+          /* TAB 4: LIVE EQUITY PORTFOLIO MANAGER */
+          <PortfolioManager />
+        ) : activeTab === 'terminal' ? (
           /* TAB 3: PRO TRADINGVIEW TERMINAL */
           <TradingTerminal />
         ) : activeTab === 'screener' ? (
@@ -251,12 +302,15 @@ export function App() {
 
               {/* Right Column: Portfolio Dashboard */}
               <div className="lg:col-span-7 space-y-6">
-                {recommendation && (
+                {/* 1. Gemini 3.6 Flash AI Portfolio Intelligence Card (Always Present on Website Load!) */}
+                <GeminiAiInsightsCard recommendation={recommendation} isLoading={isLoading} />
+
+                {recommendation ? (
                   <>
-                    {/* 1. Reality Check Feasibility Banner */}
+                    {/* 2. Reality Check Feasibility Banner */}
                     <RealityCheckBanner recommendation={recommendation} />
 
-                    {/* 2. Top Summary Metrics Header */}
+                    {/* 3. Top Summary Metrics Header */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="glass-card rounded-xl p-3.5 border border-slate-800">
                         <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Capital</span>
@@ -287,7 +341,7 @@ export function App() {
                       </div>
                     </div>
 
-                    {/* 3. Action Bar (Save Portfolio & Auto-Refresh Indicator) */}
+                    {/* 4. Action Bar (Save Portfolio & Auto-Refresh Indicator) */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Sparkles className="h-4 w-4 text-emerald-400" />
@@ -321,13 +375,14 @@ export function App() {
                       </button>
                     </div>
 
-                    {/* 4. Asset Class Donut Chart */}
+                    {/* 5. Asset Class Donut Chart */}
                     <AllocationChart
                       allocations={recommendation.allocations}
                       totalAmount={recommendation.investmentAmount}
+                      isLoading={isLoading}
                     />
 
-                    {/* 5. Recommended Stock & ETF Cards */}
+                    {/* 6. Recommended Stock & ETF Cards */}
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -343,12 +398,18 @@ export function App() {
                       </div>
                     </div>
 
-                    {/* 6. Multi-Year Compounding Projection Line Chart */}
-                    <ProjectionChart recommendation={recommendation} />
+                    {/* 7. Multi-Year Compounding Projection Line Chart */}
+                    <ProjectionChart recommendation={recommendation} isLoading={isLoading} />
 
-                    {/* 7. Historical Backtest Simulation */}
+                    {/* 8. Historical Backtest Simulation */}
                     <BacktestTable recommendation={recommendation} />
                   </>
+                ) : (
+                  <div className="glass-card rounded-2xl p-6 border border-slate-800 text-center space-y-3">
+                    <RefreshCw className="h-6 w-6 text-emerald-400 animate-spin mx-auto" />
+                    <p className="text-sm text-slate-300 font-bold">Building your risk-adjusted portfolio recommendation...</p>
+                    <p className="text-xs text-slate-500">Querying real-time Yahoo Finance NSE tickers and historical returns</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -410,6 +471,18 @@ export function App() {
               { year: '2024', portfolioReturn: 18.9, nifty50Return: 16.5 },
             ],
           });
+        }}
+      />
+
+      {/* Alpha Analyst Goldman Sachs Style Institutional Research Modal */}
+      <AlphaAnalystModal
+        isOpen={isAlphaAnalystOpen}
+        onClose={() => setIsAlphaAnalystOpen(false)}
+        initialSymbol={alphaAnalystSymbol}
+        userProfile={{
+          riskTolerance: lastParams.riskTolerance,
+          timeHorizonYears: lastParams.timeHorizonYears,
+          expectedReturnPct: lastParams.expectedReturnPct,
         }}
       />
     </div>

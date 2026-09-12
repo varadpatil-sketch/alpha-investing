@@ -2,10 +2,12 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AllocationItem } from '../types';
 import { PieChart as PieIcon } from 'lucide-react';
+import { ChartSkeleton } from './common/SkeletonLoaders';
 
 interface AllocationChartProps {
   allocations: AllocationItem[];
   totalAmount: number;
+  isLoading?: boolean;
 }
 
 const COLORS: Record<string, string> = {
@@ -16,7 +18,10 @@ const COLORS: Record<string, string> = {
   'Debt & Gold ETF': '#ec4899', // pink
 };
 
-export const AllocationChart: React.FC<AllocationChartProps> = ({ allocations, totalAmount }) => {
+export const AllocationChart: React.FC<AllocationChartProps> = ({ allocations, totalAmount, isLoading }) => {
+  if (isLoading) {
+    return <ChartSkeleton title="Calculating Asset Class Diversification..." height="h-80" />;
+  }
   // Group by Asset Class
   const groupMap: Record<string, number> = {};
   allocations.forEach((a) => {
